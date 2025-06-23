@@ -28,7 +28,7 @@ CONFIG = {
     # 钉钉机器人的 webhook URL
     "DINGTALK_WEBHOOK_URL": "",
     # 企业微信机器人的 webhook URL
-    "WEWORK_WEBHOOK_URL": "",
+    "WEWORK_WEBHOOK_URL": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=2df94823-4b3b-45dd-b5bd-f1f1a2f42e36",
     # Telegram 要填两个
     "TELEGRAM_BOT_TOKEN": "",
     "TELEGRAM_CHAT_ID": "",
