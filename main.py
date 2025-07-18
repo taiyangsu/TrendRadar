@@ -1,9 +1,12 @@
 # coding=utf-8
 
+import base64
+import hashlib
 import json
 import os
 import random
 import re
+import hmac
 import time
 import webbrowser
 from dataclasses import dataclass
@@ -13,6 +16,7 @@ from typing import Dict, List, Tuple, Optional, Union
 
 import pytz
 import requests
+import urllib
 import yaml
 
 
@@ -2359,10 +2363,38 @@ class ReportGenerator:
         """发送到钉钉"""
         headers = {"Content-Type": "application/json"}
 
+        # 从webhook_url中提取query参数
+
+        parsed_url = urllib.parse.urlparse(webhook_url)
+        query_params = urllib.parse.parse_qs(parsed_url.query)
+
+        access_token = query_params.get('access_token', [''])[0]
+        secret = query_params.get('secret', [''])[0]
+
+        if not access_token:
+            print(f"获取钉钉access_token失败 [{report_type}]")
+            return False
+        
+        url = webhook_url
+
+        if secret:
+            timestamp = str(round(time.time() * 1000))
+            string_to_sign = "{}\n{}".format(timestamp, secret)
+            
+            string_to_sign_enc = string_to_sign.encode("utf-8")
+            secret_enc = secret.encode("utf-8")
+
+            hmac_code = hmac.new(
+                secret_enc, string_to_sign_enc, digestmod=hashlib.sha256
+            ).digest()
+            sign = urllib.parse.quote_plus(base64.b64encode(hmac_code))
+
+            url = f'https://oapi.dingtalk.com/robot/send?access_token={access_token}&timestamp={timestamp}&sign={sign}'
+
+        
         text_content = ReportGenerator._render_dingtalk_content(
             report_data, update_info, mode
         )
-
         payload = {
             "msgtype": "markdown",
             "markdown": {
@@ -2377,7 +2409,7 @@ class ReportGenerator:
 
         try:
             response = requests.post(
-                webhook_url, headers=headers, json=payload, proxies=proxies, timeout=30
+                url, headers=headers, json=payload, proxies=proxies, timeout=30
             )
             if response.status_code == 200:
                 result = response.json()

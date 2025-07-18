@@ -295,6 +295,7 @@ frequency_words.txt 文件增加了一个【必须词】功能，使用 + 号
    3. **完成设置**：
       - 勾选服务条款协议 → 点击"完成"
       - 复制获得的 Webhook URL
+      - 如果开启了安全设置-加签，在 Webhook URL 后面增加参数 &secret=复制的密钥
       - 将 URL 配置到 GitHub Secrets 中的 `DINGTALK_WEBHOOK_URL`
 
    **注意**：移动端只能接收消息，无法创建新机器人。
