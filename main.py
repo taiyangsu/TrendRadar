@@ -67,6 +67,7 @@ class ConfigManager:
         telegram_chat_id = self._get_webhook_config(
             "telegram_chat_id", "TELEGRAM_CHAT_ID"
         )
+        generic_webhook_url = self._get_webhook_config("generic_webhook_url", "GENERIC_WEBHOOK_URL")
 
         # 输出配置来源信息
         webhook_sources = []
@@ -89,6 +90,9 @@ class ConfigManager:
                 "环境变量" if os.environ.get("TELEGRAM_CHAT_ID") else "配置文件"
             )
             webhook_sources.append(f"Telegram({token_source}/{chat_source})")
+        if generic_webhook_url:
+            source = "环境变量" if os.environ.get("GENERIC_WEBHOOK_URL") else "配置文件"
+            webhook_sources.append(f"通用 Webhook({source})")
 
         if webhook_sources:
             print(f"Webhook 配置来源: {', '.join(webhook_sources)}")
@@ -125,6 +129,7 @@ class ConfigManager:
             "WEWORK_WEBHOOK_URL": wework_url,
             "TELEGRAM_BOT_TOKEN": telegram_token,
             "TELEGRAM_CHAT_ID": telegram_chat_id,
+            "GENERIC_WEBHOOK_URL": generic_webhook_url,
             "WEIGHT_CONFIG": {
                 "RANK_WEIGHT": self.config_data["weight"]["rank_weight"],
                 "FREQUENCY_WEIGHT": self.config_data["weight"]["frequency_weight"],
@@ -2248,6 +2253,7 @@ class ReportGenerator:
         wework_url = CONFIG["WEWORK_WEBHOOK_URL"]
         telegram_token = CONFIG["TELEGRAM_BOT_TOKEN"]
         telegram_chat_id = CONFIG["TELEGRAM_CHAT_ID"]
+        generic_webhook_url = CONFIG["GENERIC_WEBHOOK_URL"]
 
         update_info_to_send = update_info if CONFIG["SHOW_VERSION_UPDATE"] else None
 
@@ -2294,6 +2300,15 @@ class ReportGenerator:
                 update_info_to_send,
                 proxy_url,
                 mode,
+            )
+
+        # 发送到通用 webhook
+        if generic_webhook_url:
+            results["generic"] = ReportGenerator._send_to_generic_webhook(
+                generic_webhook_url,
+                report_data,
+                report_type,
+                proxy_url,
             )
 
         if not results:
@@ -2550,6 +2565,42 @@ class ReportGenerator:
         print(f"Telegram所有 {len(batches)} 批次发送完成 [{report_type}]")
         return True
 
+    @staticmethod
+    def _send_to_generic_webhook(
+        webhook_url: str,
+        report_data: Dict,
+        report_type: str,
+        proxy_url: Optional[str] = None,
+    ) -> bool:
+        """发送到通用 webhook"""
+        headers = {"Content-Type": "application/json"}
+        
+        payload = {
+            "report_type": report_type,
+            "timestamp": TimeHelper.get_beijing_time().isoformat(),
+            "data": report_data,
+        }
+
+        proxies = None
+        if proxy_url:
+            proxies = {"http": proxy_url, "https": proxy_url}
+
+        try:
+            response = requests.post(
+                webhook_url, headers=headers, json=payload, proxies=proxies, timeout=30
+            )
+            if response.status_code == 200:
+                print(f"通用 webhook 通知发送成功 [{report_type}]")
+                return True
+            else:
+                print(
+                    f"通用 webhook 通知发送失败 [{report_type}]，状态码：{response.status_code}, 响应: {response.text}"
+                )
+                return False
+        except Exception as e:
+            print(f"通用 webhook 通知发送出错 [{report_type}]：{e}")
+            return False
+
 
 app = Flask(__name__)
 
@@ -2693,6 +2744,7 @@ class NewsAnalyzer:
                 CONFIG["DINGTALK_WEBHOOK_URL"],
                 CONFIG["WEWORK_WEBHOOK_URL"],
                 (CONFIG["TELEGRAM_BOT_TOKEN"] and CONFIG["TELEGRAM_CHAT_ID"]),
+                CONFIG["GENERIC_WEBHOOK_URL"],
             ]
         )
 
