@@ -3,6 +3,11 @@ app:
   version_check_url: "https://raw.githubusercontent.com/sansan0/TrendRadar/refs/heads/master/version"
   show_version_update: true # 控制显示版本更新提示，改成 false 将不接受新版本提示
 
+webhook_server:
+  enable: true
+  host: "0.0.0.0"
+  port: 5001
+
 crawler:
   request_interval: 1000 # 请求间隔(毫秒)
   enable_crawler: true # 是否启用爬取新闻功能，false 时直接停止程序
@@ -40,6 +45,7 @@ notification:
     wework_url: "" # 企业微信机器人的 webhook URL
     telegram_bot_token: "" # Telegram Bot Token
     telegram_chat_id: "" # Telegram Chat ID
+    generic_webhook_url: "" # 通用 webhook URL
 
 # 用于让关注度更高的新闻在更前面显示，合起来是 1 就行
 weight:

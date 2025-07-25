@@ -16,6 +16,8 @@
 [![Telegram通知](https://img.shields.io/badge/Telegram-通知支持-00D4AA?style=flat-square)](https://telegram.org/)
 [![dingtalk通知](https://img.shields.io/badge/钉钉-通知支持-00D4AA?style=flat-square)](#)
 [![飞书通知](https://img.shields.io/badge/飞书-通知支持-00D4AA?style=flat-square)](https://www.feishu.cn/)
+[![通用Webhook](https://img.shields.io/badge/通用Webhook-通知支持-00D4AA?style=flat-square)](#)
+[![Webhook触发](https://img.shields.io/badge/Webhook-触发执行-blueviolet?style=flat-square)](#)
 [![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-自动化-2088FF?style=flat-square&logo=github-actions&logoColor=white)](https://github.com/sansan0/TrendRadar)
 [![GitHub Pages](https://img.shields.io/badge/GitHub_Pages-部署-4285F4?style=flat-square&logo=github&logoColor=white)](https://sansan0.github.io/TrendRadar)
 [![Docker](https://img.shields.io/badge/Docker-部署-2496ED?style=flat-square&logo=docker&logoColor=white)](https://hub.docker.com/)
@@ -73,7 +75,11 @@
 
 ### **多渠道实时推送**
 
-支持企业微信、飞书、钉钉、Telegram 主流聊天工具，消息直达手机
+支持企业微信、飞书、钉钉、Telegram、通用 Webhook，消息直达你的各种系统。
+
+### **Webhook 触发执行**
+
+内置一个轻量级的 Web 服务器，开启后可以通过 `POST /webhook` 请求随时触发分析任务，方便与其他系统或自动化流程（如 IFTTT）集成。
 
 ### **零技术门槛部署**
 
@@ -102,6 +108,16 @@ GitHub 一键 Fork 即可使用，无需编程基础。
 **升级说明：** 
 - **小版本更新**：直接在 GitHub 网页编辑器中，用本项目的 `main.py` 代码替换你 fork 仓库中的对应文件 
 - **大版本升级**：从 v1.x 升级到 v2.0 建议删除现有 fork 后重新 fork，这样更省力且避免配置冲突
+
+### 2025/07/25 - v2.1.0
+
+**新功能**：
+- **Webhook 触发**：新增 Webhook 服务器，可通过 `POST /webhook` 触发分析，方便第三方集成。
+- **通用 Webhook 通知**：新增通用 Webhook 推送方式，可将结果发送到任意兼容的 Webhook 地址。
+
+**优化与修复**：
+- **GitHub Actions 优化**：修复了 Actions 卡住和无法正确读取 Webhook Secret 的问题。
+- **Docker 优化**：更新了 Docker 配置，支持 Webhook 触发和通用 Webhook 通知。
 
 ### 2025/07/17 - v2.0.0
 
@@ -212,6 +228,20 @@ frequency_words.txt 文件增加了一个【必须词】功能，使用 + 号
    在你 Fork 后的仓库中，进入 `Settings` > `Secrets and variables` > `Actions` > `New repository secret`，然后根据需要配置以下任一或多个通知平台：
 
    **💡 提示：** 可以同时配置多个平台，系统会向所有配置的平台发送通知。点击下方对应平台展开详细配置步骤。
+
+   <details>
+   <summary>⚪ <strong>通用 Webhook</strong> (集成能力最强)</summary>
+
+   **GitHub Secret 配置：**
+   - 名称：`GENERIC_WEBHOOK_URL`
+   - 值：你的 Webhook 地址
+
+   **说明：**
+   - 当启用通用 Webhook 后，系统会向指定的 URL 发送一个 `POST` 请求。
+   - 请求体为 JSON 格式，包含了完整的报告数据，方便你进行二次开发或与其他工具（如 IFTTT, Zapier, n8n 等）集成。
+   - JSON 结构请参考 `ReportGenerator._send_to_generic_webhook` 方法中的 `payload` 定义。
+
+   </details>
 
    <details>
    <summary>🟡 <strong>企业微信机器人</strong>（配置最简单最迅速）</summary>
@@ -340,6 +370,14 @@ frequency_words.txt 文件增加了一个【必须词】功能，使用 + 号
       - `"daily"` - 当日汇总模式（默认）
       - `"current"` - 当前榜单模式  
       - `"incremental"` - 增量监控模式
+    - **Webhook 触发器配置**: 如果你需要通过网络请求来触发分析，可以在 `config/config.yaml` 中启用 `webhook_server`：
+      ```yaml
+      webhook_server:
+        enable: true  # 设置为 true 来启用
+        host: "0.0.0.0"
+        port: 5001
+      ```
+      启用后，向 `http://<你的服务器IP>:5001/webhook` 发送 `POST` 请求即可触发一次分析。
    
     <details>
     <summary><strong>⚙️ 点击查看 frequency_words.txt 配置教程</strong></summary>
@@ -556,8 +594,19 @@ platforms:
    ```
 
 2. **配置文件**:
-   - 修改 `config/config.yaml` 和 `config/frequency_words.txt`
-   - **推送链接填写**，**设置推送定时**可通过 .env 进行配置
+   - 修改 `config/config.yaml` 和 `config/frequency_words.txt`。
+   - 在 `docker` 目录下创建 `.env` 文件（可从 `.env.example` 复制），并填入你的 Webhook URL 和定时任务配置。
+     ```env
+     # .env
+     FEISHU_WEBHOOK_URL=https://...
+     DINGTALK_WEBHOOK_URL=https://...
+     WEWORK_WEBHOOK_URL=https://...
+     TELEGRAM_BOT_TOKEN=...
+     TELEGRAM_CHAT_ID=...
+     GENERIC_WEBHOOK_URL=https://...
+     CRON_SCHEDULE="*/30 * * * *" # 定时任务频率
+     ```
+   - 如果需要从外部访问 Webhook 触发器，请确保 `docker-compose.yml` 中的 `ports` 配置（`5001:5001`）已启用。
 
 3. **启动服务**:
    ```bash
@@ -621,9 +670,17 @@ flowchart TD
     F --> G[🎯 选择运行模式<br/>config/config.yaml<br/>daily/current/incremental]
     
     G --> H[✅ 配置完成]
-    H --> I[🤖 系统每30分钟自动运行]
+    subgraph "运行方式"
+        direction LR
+        I[🤖 GitHub Actions<br/>每30分钟自动运行]
+        I2[🔌 Webhook 触发<br/>POST /webhook]
+    end
     
+    H --> I
+    H --> I2
+
     I --> J[📊 爬取各大平台热点]
+    I2 --> J
     J --> K[🔍 根据关键词筛选]
     K --> L[📱 推送到你的手机]
     
