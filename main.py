@@ -3173,7 +3173,12 @@ def main():
 
 
 if __name__ == "__main__":
-    if CONFIG.get("WEBHOOK_SERVER_ENABLE", False):
+    is_github_actions = os.environ.get("GITHUB_ACTIONS") == "true"
+
+    if is_github_actions:
+        print("GitHub Actions environment detected. Running analysis directly.")
+        main()
+    elif CONFIG.get("WEBHOOK_SERVER_ENABLE", False):
         host = CONFIG.get("WEBHOOK_SERVER_HOST", "0.0.0.0")
         port = CONFIG.get("WEBHOOK_SERVER_PORT", 5001)
         print(f"Starting webhook server on http://{host}:{port}")
