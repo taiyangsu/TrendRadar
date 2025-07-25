@@ -14,6 +14,7 @@ from typing import Dict, List, Tuple, Optional, Union
 import pytz
 import requests
 import yaml
+from flask import Flask, request, jsonify
 
 
 class ConfigManager:
@@ -98,6 +99,9 @@ class ConfigManager:
             "VERSION": self.config_data["app"]["version"],
             "VERSION_CHECK_URL": self.config_data["app"]["version_check_url"],
             "SHOW_VERSION_UPDATE": self.config_data["app"]["show_version_update"],
+            "WEBHOOK_SERVER_ENABLE": self.config_data.get("webhook_server", {}).get("enable", False),
+            "WEBHOOK_SERVER_HOST": self.config_data.get("webhook_server", {}).get("host", "0.0.0.0"),
+            "WEBHOOK_SERVER_PORT": self.config_data.get("webhook_server", {}).get("port", 5001),
             "FEISHU_MESSAGE_SEPARATOR": self.config_data["notification"][
                 "feishu_message_separator"
             ],
@@ -2547,6 +2551,18 @@ class ReportGenerator:
         return True
 
 
+app = Flask(__name__)
+
+@app.route('/webhook', methods=['POST'])
+def trigger_analysis():
+    """Webhook endpoint to trigger the analysis."""
+    print("Webhook received, triggering analysis...")
+    import threading
+    # Run the analysis in a background thread to avoid blocking the webhook response
+    thread = threading.Thread(target=main)
+    thread.start()
+    return jsonify({"status": "success", "message": "Analysis triggered in background."}), 200
+
 @dataclass
 class ModeStrategy:
     """模式策略配置"""
@@ -3105,4 +3121,11 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    if CONFIG.get("WEBHOOK_SERVER_ENABLE", False):
+        host = CONFIG.get("WEBHOOK_SERVER_HOST", "0.0.0.0")
+        port = CONFIG.get("WEBHOOK_SERVER_PORT", 5001)
+        print(f"Starting webhook server on http://{host}:{port}")
+        app.run(host=host, port=port, debug=False)
+    else:
+        print("Webhook server is disabled. Running analysis directly.")
+        main()
