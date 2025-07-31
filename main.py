@@ -8,11 +8,19 @@ import time
 import webbrowser
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional, Union
+from typing import Dict, List, Tuple, Optional, Union, Any
 
 import pytz
 import requests
 import yaml
+
+# RSS模块集成
+try:
+    from rss_integration_manager import RSSIntegrationManager
+    RSS_AVAILABLE = True
+except ImportError as e:
+    print(f"RSS模块导入失败: {e}")
+    RSS_AVAILABLE = False
 
 
 VERSION = "2.0.2"
@@ -391,6 +399,7 @@ def save_titles_to_file(results: Dict, id_to_name: Dict, failed_ids: List) -> st
 
 def load_frequency_words(
     frequency_file: Optional[str] = None,
+    rss_manager: Optional[Any] = None,
 ) -> Tuple[List[Dict], List[str]]:
     """加载频率词配置"""
     if frequency_file is None:
@@ -406,6 +415,15 @@ def load_frequency_words(
         content = f.read()
 
     word_groups = [group.strip() for group in content.split("\n\n") if group.strip()]
+
+    # 添加RSS关键词作为单独的组
+    if rss_manager and rss_manager.is_enabled():
+        rss_keywords = rss_manager.get_keywords_for_matching()
+        if rss_keywords:
+            # 将RSS关键词添加为新的组
+            rss_group = "\n".join(rss_keywords)
+            word_groups.append(rss_group)
+            print(f"已添加 {len(rss_keywords)} 个RSS关键词到匹配列表")
 
     processed_groups = []
     filter_words = []
@@ -1144,7 +1162,7 @@ def prepare_report_data(
     if not hide_new_section:
         filtered_new_titles = {}
         if new_titles and id_to_name:
-            word_groups, filter_words = load_frequency_words()
+            word_groups, filter_words = load_frequency_words(rss_manager=self.rss_manager)
             for source_id, titles_data in new_titles.items():
                 filtered_titles = {}
                 for title, title_data in titles_data.items():
@@ -2393,6 +2411,19 @@ class NewsAnalyzer:
         self.proxy_url = None
         self._setup_proxy()
         self.data_fetcher = DataFetcher(self.proxy_url)
+        
+        # 初始化RSS管理器
+        self.rss_manager = None
+        if RSS_AVAILABLE:
+            try:
+                self.rss_manager = RSSIntegrationManager()
+                if self.rss_manager.is_enabled():
+                    print(f"RSS模块已启用: {self.rss_manager.get_rss_summary()['config_summary']['total_feeds']}个RSS源")
+                else:
+                    print("RSS模块已禁用")
+            except Exception as e:
+                print(f"RSS模块初始化失败: {e}")
+                self.rss_manager = None
 
         if self.is_github_actions:
             self._check_version_update()
@@ -2496,7 +2527,7 @@ class NewsAnalyzer:
             print(f"读取到 {total_titles} 个标题（已按当前监控平台过滤）")
 
             new_titles = detect_latest_new_titles(current_platform_ids)
-            word_groups, filter_words = load_frequency_words()
+            word_groups, filter_words = load_frequency_words(rss_manager=self.rss_manager)
 
             return (
                 all_results,
@@ -2724,9 +2755,74 @@ class NewsAnalyzer:
         print(f"开始爬取数据，请求间隔 {self.request_interval} 毫秒")
         ensure_directory_exists("output")
 
+        # 获取API数据
         results, id_to_name, failed_ids = self.data_fetcher.crawl_websites(
             ids, self.request_interval
         )
+
+        # 集成RSS数据
+        if self.rss_manager and self.rss_manager.is_enabled():
+            try:
+                print("开始获取RSS数据...")
+                
+                # 将API数据转换为统一格式
+                api_unified_data = {}
+                for api_id, api_items in results.items():
+                    api_unified_data[api_id] = {
+                        "platform_id": api_id,
+                        "platform_name": id_to_name.get(api_id, api_id),
+                        "category": "api",
+                        "total_items": len(api_items),
+                        "last_update": datetime.now().isoformat(),
+                        "items": [],
+                        "metadata": {"data_type": "api"}
+                    }
+                    
+                    for title, info in api_items.items():
+                        if isinstance(info, dict):
+                            ranks = info.get("ranks", [])
+                            url = info.get("url", "")
+                            mobile_url = info.get("mobileUrl", "")
+                        else:
+                            ranks = info if isinstance(info, list) else []
+                            url = ""
+                            mobile_url = ""
+                        
+                        rank = ranks[0] if ranks else None
+                        api_unified_data[api_id]["items"].append({
+                            "title": title,
+                            "url": url,
+                            "mobileUrl": mobile_url,
+                            "source": api_id,
+                            "rank": rank,
+                            "data_type": "api"
+                        })
+                
+                # 获取并合并RSS数据
+                merged_data = self.rss_manager.merge_with_api_data(api_unified_data)
+                
+                # 将合并后的数据转换回原格式以保持兼容性
+                for platform_id, platform_data in merged_data.items():
+                    if not platform_id.startswith("_") and platform_data.get("metadata", {}).get("data_type") == "rss":
+                        # 这是RSS数据，需要添加到results中
+                        rss_items = {}
+                        for item in platform_data.get("items", []):
+                            title = item.get("title", "")
+                            if title:
+                                rss_items[title] = {
+                                    "ranks": [item.get("rank", 1)],
+                                    "url": item.get("url", ""),
+                                    "mobileUrl": item.get("url", "")  # RSS一般没有separate mobile URL
+                                }
+                        
+                        if rss_items:
+                            results[platform_id] = rss_items
+                            id_to_name[platform_id] = platform_data.get("platform_name", platform_id)
+                
+                print(f"RSS数据集成完成，总平台数: {len(results)}")
+                
+            except Exception as e:
+                print(f"RSS数据集成失败: {e}")
 
         title_file = save_titles_to_file(results, id_to_name, failed_ids)
         print(f"标题已保存到: {title_file}")
@@ -2742,7 +2838,7 @@ class NewsAnalyzer:
 
         new_titles = detect_latest_new_titles(current_platform_ids)
         time_info = Path(save_titles_to_file(results, id_to_name, failed_ids)).stem
-        word_groups, filter_words = load_frequency_words()
+        word_groups, filter_words = load_frequency_words(rss_manager=self.rss_manager)
 
         # current模式下，实时推送需要使用完整的历史数据来保证统计信息的完整性
         if self.report_mode == "current":
@@ -2861,6 +2957,13 @@ class NewsAnalyzer:
         except Exception as e:
             print(f"分析流程执行出错: {e}")
             raise
+        finally:
+            # 清理RSS资源
+            if self.rss_manager:
+                try:
+                    self.rss_manager.close()
+                except Exception as e:
+                    print(f"RSS资源清理失败: {e}")
 
 
 def main():

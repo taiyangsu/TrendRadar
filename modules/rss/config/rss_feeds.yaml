@@ -1,0 +1,64 @@
+rss:
+  enable_rss: true
+  request_interval: 30000  # 请求间隔(毫秒)
+  timeout: 30             # 请求超时时间(秒)
+  max_retries: 3          # 最大重试次数
+  cache_duration: 300     # 缓存时间(秒)
+  
+  feeds:
+    # 技术类RSS源
+    - id: "github_trending"
+      name: "GitHub趋势"
+      url: "https://rsshub.app/github/trending/daily"
+      category: "technology"
+      enabled: true
+      priority: 1
+    
+    - id: "stackoverflow"
+      name: "Stack Overflow"
+      url: "https://rsshub.app/stackoverflow/top/week"
+      category: "technology"
+      enabled: true
+      priority: 2
+    
+    # 新闻类RSS源
+    - id: "techcrunch"
+      name: "TechCrunch"
+      url: "https://rsshub.app/techcrunch/cn"
+      category: "news"
+      enabled: true
+      priority: 1
+    
+    # 社交媒体类RSS源
+    - id: "zhihu_hot"
+      name: "知乎热榜"
+      url: "https://rsshub.app/zhihu/hotlist"
+      category: "social"
+      enabled: true
+      priority: 1
+    
+    - id: "weibo_hot"
+      name: "微博热搜"
+      url: "https://rsshub.app/weibo/search/hot"
+      category: "social"
+      enabled: true
+      priority: 2
+
+    - id: "lowendtalk"
+      name: "LowEndTalk"
+      url: "https://lowendtalk.com/discussions/feed.rss"
+      category: "technology"
+      enabled: true
+      priority: 3
+
+# RSS关键词配置（支持RSS内容的关键词匹配）
+rss_keywords:
+  - "人工智能"
+  - "AI"
+  - "科技"
+  - "技术"
+  - "创新"
+  - "数据"
+  - "算法"
+  - "vps"
+  - "7USD"
