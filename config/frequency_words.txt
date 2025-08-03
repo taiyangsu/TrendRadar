@@ -1,6 +1,10 @@
-agent
-rag
-AI
+人工智能
+AI  
+ChatGPT
++技术
+!广告
+!培训
+
 胖东来
 于东来
 
