@@ -1,25 +1,48 @@
-    def _has_valid_content(
-        self, stats: List[Dict], new_titles: Optional[Dict] = None
+    def _send_notification_if_needed(
+        self,
+        stats: List[Dict],
+        report_type: str,
+        mode: str,
+        failed_ids: Optional[List] = None,
+        new_titles: Optional[Dict] = None,
+        id_to_name: Optional[Dict] = None,
     ) -> bool:
-        """检查是否有有效的新闻内容"""
-        if self.report_mode == "incremental":
-            # 增量模式下，只要stats有内容就说明有匹配的新闻
-            return any(stat["count"] > 0 for stat in stats)
-        elif self.report_mode == "current":
-            # current模式下，允许以下情况触发推送：
-            # 1. 有匹配的频率词新闻 (stats > 0)
-            # 2. 有新增新闻 (new_titles 有内容)
-            # 3. 即使是空集，也允许发送"暂无匹配"的提示
-            has_matched_news = any(stat["count"] > 0 for stat in stats)
-            has_new_news = bool(
-                new_titles and any(len(titles) > 0 for titles in new_titles.values())
+        """统一的通知发送逻辑，包含所有判断条件"""
+        has_webhook = self._has_webhook_configured()
+
+        if (
+            CONFIG["ENABLE_NOTIFICATION"]
+            and has_webhook
+            and self._has_valid_content(stats, new_titles)
+        ):
+            send_to_webhooks(
+                stats,
+                failed_ids or [],
+                report_type,
+                new_titles,
+                id_to_name,
+                self.update_info,
+                self.proxy_url,
+                mode=mode,
             )
-            # 在current模式下，即使没有匹配内容，也允许发送空集提示
-            return True  # 总是允许发送，让后续逻辑决定具体内容
-        else:
-            # 当日汇总模式下，检查是否有匹配的频率词新闻或新增新闻
-            has_matched_news = any(stat["count"] > 0 for stat in stats)
-            has_new_news = bool(
-                new_titles and any(len(titles) > 0 for titles in new_titles.values())
-            )
-            return has_matched_news or has_new_news
+            return True
+        elif CONFIG["ENABLE_NOTIFICATION"] and not has_webhook:
+            print("⚠️ 警告：通知功能已启用但未配置webhook URL，将跳过通知发送")
+        elif not CONFIG["ENABLE_NOTIFICATION"]:
+            print(f"跳过{report_type}通知：通知功能已禁用")
+        elif (
+            CONFIG["ENABLE_NOTIFICATION"]
+            and has_webhook
+            and not self._has_valid_content(stats, new_titles)
+        ):
+            mode_strategy = self._get_mode_strategy()
+            if "实时" in report_type:
+                print(
+                    f"跳过实时推送通知：{mode_strategy['mode_name']}下未检测到匹配的新闻"
+                )
+            else:
+                print(
+                    f"跳过{mode_strategy['summary_report_type']}通知：未匹配到有效的新闻内容"
+                )
+
+        return False
