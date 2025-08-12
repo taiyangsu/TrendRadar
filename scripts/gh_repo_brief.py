@@ -1,13 +1,11 @@
 # coding: utf-8
 """
-GitHub 仓库用途简述
-- 输入：一个 GitHub 仓库 URL 列表
-- 行为：调用 GitHub API 获取 readme / 描述 / topics；调用 Qwen 总结为中文一句话用途
-- 输出：markdown 列表，用于插入到推送中
-
+GitHub 仓库用途简述（Qwen 强提示）
+- 输入：GitHub 仓库 URL 列表（环境变量 GH_REPOS）
+- 行为：GitHub API 获取 description/topics/README 片段；Qwen 输出中文“一句话用途”（≤20字）
+- 输出：markdown 列表文本
 Env:
-  GITHUB_TOKEN (actions 自动注入)
-  QWEN_API_BASE / QWEN_API_KEY / QWEN_MODEL
+  GITHUB_TOKEN, QWEN_API_BASE, QWEN_API_KEY, QWEN_MODEL
 """
 import os
 import base64
@@ -31,7 +29,6 @@ def gh_get(owner: str, repo: str, path: str) -> requests.Response:
 
 
 def fetch_repo_brief(owner: str, repo: str) -> Tuple[str, str, str]:
-    # 返回 (全名, 简述素材, 链接)
     full = f"{owner}/{repo}"
     link = f"https://github.com/{full}"
     desc = ""
@@ -41,18 +38,23 @@ def fetch_repo_brief(owner: str, repo: str) -> Tuple[str, str, str]:
         j = r.json()
         desc = (j.get("description") or "").strip()
         topics = j.get("topics") or []
-    # README
     r2 = gh_get(owner, repo, "/readme")
     readme = ""
     if r2.status_code == 200:
         try:
             j2 = r2.json()
             content_b64 = j2.get("content") or ""
-            readme = base64.b64decode(content_b64).decode("utf-8", errors="ignore")[:4000]
+            readme = base64.b64decode(content_b64).decode("utf-8", errors="ignore")[:2000]
         except Exception:
             pass
     material = f"描述:{desc}\nTopics:{', '.join(topics)}\nREADME片段:\n{readme}"
     return full, material, link
+
+PRO_SYSTEM_PROMPT = (
+    "你是开源项目解说员。根据提供的项目简介/Topics/README片段，为每个仓库生成‘中文一句话用途’，"
+    "严格要求：\n- ≤20字；\n- 避免空泛词；\n- 无表情符号；\n- 信息不足时写‘信息不足’；\n- 不臆测。\n"
+    "输出 Markdown 列表，每行格式：\n- owner/repo：用途简述\n"
+)
 
 
 def call_qwen(materials: List[Tuple[str, str, str]]) -> str:
@@ -64,16 +66,10 @@ def call_qwen(materials: List[Tuple[str, str, str]]) -> str:
     if not api_key:
         return ""
     client = OpenAI(base_url=api_base, api_key=api_key)
-    # 组装为简洁提示
     text = "\n\n".join([f"[{full}] {link}\n{mat}" for full, mat, link in materials])
-    system = (
-        "你是仓库用途解说员。请根据提供的描述/README片段，"
-        "为每个仓库生成<=20字的中文一句话用途，不要出现英文长句。"
-    )
-    user = f"材料如下：\n{text}"
     resp = client.chat.completions.create(
         model=model,
-        messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
+        messages=[{"role": "system", "content": PRO_SYSTEM_PROMPT}, {"role": "user", "content": text}],
         max_tokens=800,
         temperature=0.3,
     )
@@ -81,7 +77,6 @@ def call_qwen(materials: List[Tuple[str, str, str]]) -> str:
 
 
 def main() -> None:
-    # 读取环境变量 GH_REPOS 为逗号分隔 URL 列表
     urls = [u.strip() for u in (os.environ.get("GH_REPOS", "").split(",")) if u.strip()]
     pairs: List[Tuple[str, str, str]] = []
     for u in urls[:8]:
