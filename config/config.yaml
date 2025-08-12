@@ -24,7 +24,7 @@ crawler:
 #   • 适用场景：避免重复信息干扰
 
 report:
-  mode: "daily" # 可选: "daily"|"incremental"|"current"
+  mode: "current" # 可选: "daily"|"incremental"|"current"
   rank_threshold: 5 # 排名高亮阈值
 
 notification:
@@ -36,7 +36,7 @@ notification:
   webhooks:
     feishu_url: "" # 飞书机器人的 webhook URL
     dingtalk_url: "" # 钉钉机器人的 webhook URL
-    wework_url: "" # 企业微信机器人的 webhook URL
+    wework_url: "" # 企业微信机器人的 webhook URL（建议使用 Secrets: WEWORK_WEBHOOK_URL）
     telegram_bot_token: "" # Telegram Bot Token
     telegram_chat_id: "" # Telegram Chat ID
 
@@ -46,8 +46,7 @@ weight:
   frequency_weight: 0.3 # 频次权重
   hotness_weight: 0.1 # 热度权重
 
-# 增加无聊的小知识
-# 这里的 name 你可以定义任意名称，只具有显示作用，不会影响数据的处理
+# 平台列表（可按需增减）
 platforms:
   - id: "toutiao"
     name: "今日头条"
