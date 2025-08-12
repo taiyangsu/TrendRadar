@@ -28,7 +28,7 @@ jobs:
 
       - name: Chinese commit summaries (Qwen3 via ModelScope)
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
           GITHUB_EVENT_PATH: ${{ github.event_path }}
           QWEN_API_BASE: ${{ secrets.QWEN_API_BASE }}
           QWEN_API_KEY: ${{ secrets.QWEN_API_KEY }}
