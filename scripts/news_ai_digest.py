@@ -4,11 +4,11 @@ AI 新闻摘要（中文）
 - 读取最新 output/<date>/txt/*.txt 的内容（取最新一个），限制最大字符数
 - 使用 Qwen3-Coder-480B（ModelScope OpenAI 兼容）生成中文摘要：
   - 3-6 条关键主题（带来源类型：微博/新闻/GitHub等）
-  - 5 条可执行关注点（使用动词开头）
+  - 3-5 条可执行关注点（使用动词开头）
   - 若包含 GitHub 仓库链接，生成“仓库要点”简述（1 句/仓库）
 - 将结果以企业微信/PushPlus 推送
 
-Env（通过 GitHub Secrets 配置）:
+Env（通过 GitHub Secrets 配置):
   QWEN_API_BASE, QWEN_API_KEY, QWEN_MODEL
   WEWORK_WEBHOOK_URL, PUSHPLUS_TOKEN
 """
@@ -51,6 +51,25 @@ def collect_repo_links(text: str) -> List[str]:
     return list(dict.fromkeys(pat.findall(text)))[:12]
 
 
+PRO_SYSTEM_PROMPT = (
+    "你是‘趋势雷达’的信息分析员，负责将英文/中文混合的原始片段提炼成面向管理者的中文要点。\n"
+    "输出必须结构化、可扫描、无表情符号、不要夸张营销语。\n"
+    "严格约束：\n"
+    "- 不臆测：没有依据就写‘信息不足’；不要捏造数据或来源；\n"
+    "- 中文输出：保持简洁，单条不超过30字；\n"
+    "- 可信度：如出现传闻或未经证实内容，显式标注‘待证实’；\n"
+    "- 来源标注：每条要点尽量标注来源类别（微博/新闻/GitHub）。\n"
+    "以 Markdown 输出如下版式：\n"
+    "**中文AI摘要**\n\n"
+    "- 关键主题（3-6条）\n"
+    "  - [来源] 摘要…\n"
+    "- 可执行关注点（3-5条，动词开头）\n"
+    "  - 跟踪/验证/比对/订阅…\n"
+    "- GitHub 仓库用途（存在时，每仓库≤1句）\n"
+    "  - owner/repo：用途简述。\n"
+)
+
+
 def call_qwen(system: str, user: str) -> Optional[str]:
     if not OpenAI:
         return None
@@ -64,7 +83,7 @@ def call_qwen(system: str, user: str) -> Optional[str]:
         model=model,
         messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
         max_tokens=LLM_MAX_TOKENS,
-        temperature=0.5,
+        temperature=0.4,
     )
     return resp.choices[0].message.content if resp and resp.choices else None
 
@@ -103,21 +122,13 @@ def main() -> None:
     clip = read_clip(f)
     repos = collect_repo_links(clip)
 
-    system = (
-        "你是新闻情报分析助手。请基于给定原文片段（可能包含微博/资讯/GitHub链接），"
-        "输出结构化中文摘要，要求：\n"
-        "1) 关键主题：3-6条，每条<=30字；\n"
-        "2) 可执行关注点：3-5条，以动词开头；\n"
-        "3) 若含GitHub链接，为这些仓库给出1句话用途释义（中文，简洁）。\n"
-        "保持谨慎，不要臆测与虚构。"
-    )
     user = f"原文片段(可能已截断):\n{clip}\n\nGitHub链接: {', '.join(repos)}"
-    content = call_qwen(system, user)
+    content = call_qwen(PRO_SYSTEM_PROMPT, user)
     if not content:
         print("llm none; skip push")
         return
 
-    md = f"**中文AI摘要**\n\n{content}"
+    md = content if content.strip().startswith("**中文AI摘要**") else f"**中文AI摘要**\n\n{content}"
     ok1 = push_wework(md)
     ok2 = push_plus("中文AI摘要", md)
     print("pushed:", ok1 or ok2)
