@@ -110,23 +110,29 @@ def get_metalpriceapi_spot_xau() -> Tuple[Dict[str, Any], str]:
     key = os.environ.get("METALPRICEAPI_KEY", "").strip()
     if not key:
         return {}, "未配置 METALPRICEAPI_KEY"
-    url = f"https://api.metalpriceapi.com/v1/latest?access_key={key}&base=USD&symbols=XAU"
-    try:
-        r = requests.get(url, headers=HEADERS, timeout=TIMEOUT)
-        if r.status_code != 200:
-            return {}, f"MetalpriceAPI HTTP {r.status_code}"
-        j = r.json()
-        if not j.get("success", True):
-            return {}, f"MetalpriceAPI 错误 {j.get('error')}"
-        rates = j.get("rates", {})
-        xau = rates.get("XAU")
-        if xau is None:
-            return {}, "MetalpriceAPI 无 XAU"
-        val = float(xau)
-        price = (1.0 / val) if 0 < val < 1 else val  # 统一为 USD/oz
-        return {"price": float(price), "unit": "USD/oz", "source": url}, ""
-    except Exception as e:
-        return {}, f"MetalpriceAPI 异常 {e}"
+    url_primary = f"https://api.metalpriceapi.com/v1/latest?api_key={key}&base=USD&currencies=XAU"
+    url_fallback = f"https://api.metalpriceapi.com/v1/latest?access_key={key}&base=USD&symbols=XAU"
+    for url in (url_primary, url_fallback):
+        try:
+            r = requests.get(url, headers=HEADERS, timeout=TIMEOUT)
+            if r.status_code != 200:
+                continue
+            j = r.json()
+            if isinstance(j, dict) and j.get("error"):
+                continue
+            rates = j.get("rates", {}) if isinstance(j, dict) else {}
+            xau = rates.get("XAU")
+            if xau is None and isinstance(j, dict):
+                xau = j.get("price")
+            if xau is None:
+                continue
+            val = float(xau)
+            price = (1.0 / val) if 0 < val < 1 else val
+            return {"price": float(price), "unit": "USD/oz", "source": url}, ""
+        except Exception as e:
+            print("MetalpriceAPI 异常", e)
+            continue
+    return {}, "MetalpriceAPI 未取得数据（已尝试 api_key 与 access_key 两种参数）"
 
 
 def get_metalsapi_spot_xau() -> Tuple[Dict[str, Any], str]:
@@ -146,7 +152,7 @@ def get_metalsapi_spot_xau() -> Tuple[Dict[str, Any], str]:
         if xau is None:
             return {}, "Metals 无 XAU"
         val = float(xau)
-        price = (1.0 / val) if 0 < val < 1 else val  # 统一为 USD/oz
+        price = (1.0 / val) if 0 < val < 1 else val
         return {"price": float(price), "unit": "USD/oz", "source": url}, ""
     except Exception as e:
         return {}, f"Metals 异常 {e}"
@@ -157,7 +163,6 @@ def _fetch_json_generic(url: str, token: Optional[str] = None) -> Tuple[Optional
         return None, "未配置 URL"
     headers = dict(HEADERS)
     if token:
-        # 通用令牌头：优先 Authorization: Bearer；不确定时也可作为 X-API-Key
         headers["Authorization"] = f"Bearer {token}"
         headers.setdefault("X-API-Key", token)
     try:
@@ -177,12 +182,10 @@ def get_goldapi_spot_xau() -> Tuple[Dict[str, Any], str]:
     j, err = _fetch_json_generic(url, token)
     if err:
         return {}, f"Gold-API {err}"
-    # 尽量通用字段解析
     for k in ["price", "usd", "per_oz", "xauusd", "value"]:
         v = j.get(k)
         if isinstance(v, (int, float)):
             return {"price": float(v), "unit": "USD/oz", "source": url}, ""
-    # 嵌套结构尝试
     for k in ["data", "result", "rates"]:
         if isinstance(j.get(k), dict):
             sub = j[k]
@@ -201,12 +204,10 @@ def get_freegoldprice_spot_xau() -> Tuple[Dict[str, Any], str]:
     j, err = _fetch_json_generic(url, token)
     if err:
         return {}, f"FreeGoldPrice {err}"
-    # 常见字段尝试
     for k in ["price", "usd", "xauusd", "per_oz", "value"]:
         v = j.get(k)
         if isinstance(v, (int, float)):
             return {"price": float(v), "unit": "USD/oz", "source": url}, ""
-    # 嵌套
     for k in ["data", "result", "rates"]:
         if isinstance(j.get(k), dict):
             sub = j[k]
@@ -220,7 +221,6 @@ def get_freegoldprice_spot_xau() -> Tuple[Dict[str, Any], str]:
 # --- 数据源：国内 ETF ---
 
 def _fmt_code(c: str) -> Tuple[str, str]:
-    # 输入如 "1.518880" -> ("1","518880")；若无点，以 5 开头默认为上交所 1，否则深交所 0
     if "." in c:
         p = c.split(".")
         return p[0], p[1]
@@ -229,7 +229,7 @@ def _fmt_code(c: str) -> Tuple[str, str]:
 
 def get_etf_from_eastmoney(codes: List[str]) -> Tuple[List[Dict[str, Any]], List[str]]:
     out, errs = [], []
-    fields = "f43,f44,f45,f46,f57,f58,f60"  # 最新、最高、最低、开盘、代码、名称、昨收
+    fields = "f43,f44,f45,f46,f57,f58,f60"
     for code in codes:
         mark, pure = _fmt_code(code)
         url = f"https://push2.eastmoney.com/api/qt/stock/get?secid={mark}.{pure}&fields={fields}"
@@ -277,11 +277,9 @@ def build_markdown(te: Dict[str, Any], spot: Dict[str, Any], etfs: List[Dict[str
 
 
 def main():
-    # 1) COMEX 期货
     te, te_err = get_te_comex_gold()
     if te_err: print("TE:", te_err)
 
-    # 2) 现货 XAU/USD（多源优先与降级）
     spot: Dict[str, Any] = {}
     spot_errs: List[str] = []
     for getter in (
@@ -299,7 +297,6 @@ def main():
     for e in spot_errs:
         print("SPOT:", e)
 
-    # 3) ETF
     default_codes = "1.518880,1.518800,0.159934,0.159937"
     codes_env = os.environ.get("ETF_CODES", default_codes)
     codes = [c.strip() for c in codes_env.split(",") if c.strip()]
@@ -309,7 +306,6 @@ def main():
 
     md = build_markdown(te, spot, etfs)
 
-    # 并行推送，任一成功即认为成功
     ok_wework = push_wework_md(md)
     ok_pp = push_pushplus_md("黄金多源监控", md)
     ok = ok_wework or ok_pp
