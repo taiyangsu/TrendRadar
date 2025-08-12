@@ -28,9 +28,15 @@ jobs:
       - name: Run gold multi monitor
         env:
           WEWORK_WEBHOOK_URL: ${{ secrets.WEWORK_WEBHOOK_URL }}
+          PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
           TE_API_CLIENT: ${{ secrets.TE_API_CLIENT }}
           TE_API_SECRET: ${{ secrets.TE_API_SECRET }}
+          METALPRICEAPI_KEY: ${{ secrets.METALPRICEAPI_KEY }}
           METALS_API_KEY: ${{ secrets.METALS_API_KEY }}
+          GOLDAPI_URL: ${{ secrets.GOLDAPI_URL }}
+          GOLDAPI_TOKEN: ${{ secrets.GOLDAPI_TOKEN }}
+          FREEGOLDPRICE_URL: ${{ secrets.FREEGOLDPRICE_URL }}
+          FREEGOLDPRICE_TOKEN: ${{ secrets.FREEGOLDPRICE_TOKEN }}
           ETF_CODES: ${{ secrets.ETF_CODES }}
         run: |
           python gold_multi_monitor.py
