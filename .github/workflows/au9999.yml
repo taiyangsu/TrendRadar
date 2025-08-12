@@ -1,0 +1,37 @@
+name: AU9999 Realtime Monitor
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"  # 每10分钟
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Run AU9999 monitor
+        env:
+          WEWORK_WEBHOOK_URL: ${{ secrets.WEWORK_WEBHOOK_URL }}
+          # 如使用 UniAPI，请在仓库 Secrets 配置以下两项
+          UNIAPI_URL: ${{ secrets.UNIAPI_URL }}
+          UNIAPI_APPKEY: ${{ secrets.UNIAPI_APPKEY }}
+          # 如仅使用兜底网页抓取，可设 AU9999_PROVIDER=scrape_hjjj
+          AU9999_PROVIDER: ${{ secrets.AU9999_PROVIDER }}
+        run: |
+          python au9999_monitor.py
