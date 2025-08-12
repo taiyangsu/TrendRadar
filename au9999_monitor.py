@@ -3,7 +3,7 @@
 AU9999 实时价格监控脚本（最小依赖）
 - 优先支持第三方API（提供 env: UNIAPI_URL, UNIAPI_APPKEY）
 - 兜底爬取展示页（env: AU9999_PROVIDER=scrape_hjjj 使用 http://www.huangjinjiage.cn/guojijinjia.html）
-- 推送到企业微信（env: WEWORK_WEBHOOK_URL）
+- 推送到企业微信（env: WEWORK_WEBHOOK_URL）与 PushPlus（env: PUSHPLUS_TOKEN）
 """
 import os
 import re
@@ -58,11 +58,10 @@ def fetch_from_uniapi():
 
 
 def _clean_html_text(text: str) -> str:
-    # 统一空白和不可见字符
     if not isinstance(text, str):
         return ""
-    text = text.replace("\xa0", " ")  # nbsp
-    text = re.sub(r"[\u2000-\u200F]", " ", text)  # 其他零宽空白
+    text = text.replace("\xa0", " ")
+    text = re.sub(r"[\u2000-\u200F]", " ", text)
     text = re.sub(r"\s+", " ", text)
     return text
 
@@ -74,7 +73,6 @@ def fetch_from_hjjj():
         if resp.status_code != 200:
             return None, f"HJJJ HTTP {resp.status_code}"
         text = _clean_html_text(resp.text)
-        # 更宽松的匹配：在 AU9999 后 0~120 个字符内提取第一个数值（含小数）
         patterns = [
             r"上海\s*AU\s*9999[^0-9]{0,40}([0-9]+(?:\.[0-9]+)?)",
             r"AU\s*9999[^0-9]{0,40}([0-9]+(?:\.[0-9]+)?)",
@@ -96,27 +94,44 @@ def fetch_from_hjjj():
         return None, f"HJJJ 异常: {e}"
 
 
+# --- Push Channels ---
+
 def post_wework_markdown(content: str) -> bool:
     webhook = os.environ.get("WEWORK_WEBHOOK_URL", "").strip()
     if not webhook:
-        print("WEWORK_WEBHOOK_URL 未配置，跳过推送")
         return False
     payload = {"msgtype": "markdown", "markdown": {"content": content}}
     try:
         r = requests.post(webhook, headers={"Content-Type": "application/json"}, data=json.dumps(payload), timeout=TIMEOUT)
         if r.status_code == 200:
-            try:
-                j = r.json()
-                if j.get("errcode") == 0:
-                    return True
-                print("企业微信返回非0:", j)
-            except Exception:
-                print("企业微信返回非JSON:", r.text[:200])
-        else:
-            print("企业微信HTTP错误:", r.status_code, r.text[:200])
-    except Exception as e:
-        print("企业微信推送异常:", e)
-    return False
+            j = r.json()
+            return j.get("errcode") == 0
+        return False
+    except Exception:
+        return False
+
+
+def post_pushplus_markdown(title: str, content: str) -> bool:
+    token = os.environ.get("PUSHPLUS_TOKEN", "").strip()
+    if not token:
+        return False
+    url = "https://www.pushplus.plus/send"
+    payload = {"token": token, "title": title, "content": content, "template": "markdown"}
+    try:
+        r = requests.post(url, headers={"Content-Type": "application/json"}, data=json.dumps(payload), timeout=TIMEOUT)
+        if r.status_code == 200:
+            j = r.json()
+            # pushplus 返回 code==200 表示成功
+            return (j.get("code") == 200)
+        return False
+    except Exception:
+        return False
+
+
+def post_notify(title: str, md_content: str) -> bool:
+    ok1 = post_wework_markdown(md_content)
+    ok2 = post_pushplus_markdown(title, md_content)
+    return ok1 or ok2
 
 
 def main():
@@ -127,12 +142,10 @@ def main():
     if provider == "uniapi":
         data, err = fetch_from_uniapi()
         if data is None:
-            print("UNIAPI 失败:", err)
             data, err = fetch_from_hjjj()
     else:
         data, err = fetch_from_hjjj()
         if data is None:
-            print("HJJJ 失败:", err)
             data, _ = fetch_from_uniapi()
 
     if data is None:
@@ -150,7 +163,7 @@ def main():
         f"- **来源**: {source}\n"
     )
 
-    ok = post_wework_markdown(md)
+    ok = post_notify("AU9999 实时价格", md)
     print("推送结果:", ok)
 
 
