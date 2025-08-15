@@ -71,3 +71,6 @@ platforms:
     name: "抖音"
   - id: "zhihu"
     name: "知乎"
+
+on:
+  workflow_dispatch: # 允许手动触发
