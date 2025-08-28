@@ -1,0 +1,151 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>频率词统计报告</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            h1, h2 { color: #333; }
+            table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; }
+            tr:nth-child(even) { background-color: #f9f9f9; }
+            .word { font-weight: bold; }
+            .count { text-align: center; }
+            .percentage { text-align: center; }
+            .titles { max-width: 500px; }
+            .source { color: #666; font-style: italic; }
+            .error { color: #d9534f; }
+            .news-link { 
+                color: #007bff; 
+                text-decoration: none; 
+                border-bottom: 1px dotted #007bff;
+            }
+            .news-link:hover { 
+                color: #0056b3; 
+                text-decoration: underline; 
+            }
+            .news-link:visited { 
+                color: #6f42c1; 
+            }
+            .no-link { 
+                color: #333; 
+            }
+            .new-title {
+                background-color: #fff3cd;
+                border: 1px solid #ffc107;
+                border-radius: 3px;
+                padding: 2px 6px;
+                margin: 2px 0;
+            }
+            .new-section {
+                background-color: #d1ecf1;
+                border: 1px solid #bee5eb;
+                border-radius: 5px;
+                padding: 10px;
+                margin-top: 10px;
+            }
+            .new-section h3 {
+                color: #0c5460;
+                margin-top: 0;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>频率词统计报告</h1>
+    <p>报告类型: 实时分析</p><p>总标题数: 255</p><p>生成时间: 2025-08-28 10:22:25</p>
+        <table>
+            <tr>
+                <th>排名</th>
+                <th>频率词</th>
+                <th>出现次数</th>
+                <th>占比</th>
+                <th>相关标题</th>
+            </tr>
+    
+            <tr>
+                <td>1</td>
+                <td class="word">苹果 库克 iphone ipad mac ios</td>
+                <td class="count">8</td>
+                <td class="percentage">3.14%</td>
+                <td class="titles"><div class='new-title'>🆕 [财联社热门] <a href="https://www.cls.cn/detail/2128246" target="_blank" class="news-link">耶伦批特朗普解雇库克：违法且危险，或致灾难性后果</a> [6] <font color='grey'>- 10时22分</font></div><br><div class='new-title'>🆕 [bilibili 热搜] <a href="https://search.bilibili.com/all?keyword=%E8%8B%B9%E6%9E%9C%E5%8F%91%E5%B8%83%E4%BC%9A%E5%AE%98%E5%AE%A3" target="_blank" class="news-link">苹果发布会官宣</a> [9] <font color='grey'>- 10时22分</font></div><br><div class='new-title'>🆕 [bilibili 热搜] <a href="https://search.bilibili.com/all?keyword=iPhone%2017%E7%B3%BB%E5%88%97%E6%96%B0%E5%93%81%E5%89%8D%E7%9E%BB" target="_blank" class="news-link">iPhone 17系列新品前瞻</a> [13] <font color='grey'>- 10时22分</font></div><br><div class='new-title'>🆕 [抖音] <a href="https://www.douyin.com/hot/2216977" target="_blank" class="news-link">今年苹果要发布哪些新品</a> [16] <font color='grey'>- 10时22分</font></div><br><div class='new-title'>🆕 [bilibili 热搜] <a href="https://search.bilibili.com/all?keyword=%E4%BB%8A%E5%B9%B4%E8%8B%B9%E6%9E%9C%E8%A6%81%E5%8F%91%E5%B8%83%E5%93%AA%E4%BA%9B%E6%96%B0%E5%93%81" target="_blank" class="news-link">今年苹果要发布哪些新品</a> [22] <font color='grey'>- 10时22分</font></div><br><div class='new-title'>🆕 [今日头条] <a href="https://www.toutiao.com/trending/7543418548053937690/" target="_blank" class="news-link">iPhone 17定档 Air成最大看点</a> [27] <font color='grey'>- 10时22分</font></div><br><div class='new-title'>🆕 [贴吧] <a href="https://tieba.baidu.com/hottopic/browse/hottopic?topic_id=28344534&amp;amp;topic_name=%E6%94%B6%E5%89%B2%E6%9E%9C%E7%B2%89%2C%E8%8B%B9%E6%9E%9C%E9%AB%98%E7%87%83%E5%8F%91%E5%B8%83%E4%BC%9A%E5%AE%9A9.10" target="_blank" class="news-link">收割果粉,苹果高燃发布会定9.10</a> [27] <font color='grey'>- 10时22分</font></div><br><div class='new-title'>🆕 [抖音] <a href="https://www.douyin.com/hot/2217012" target="_blank" class="news-link">iPhone 17全系价格曝光</a> [29] <font color='grey'>- 10时22分</font></div></td>
+            </tr>
+        
+            <tr>
+                <td>2</td>
+                <td class="word">黄仁勋 英伟达 NVIDIA</td>
+                <td class="count">7</td>
+                <td class="percentage">2.75%</td>
+                <td class="titles"><div class='new-title'>🆕 [华尔街见闻] <a href="https://wallstreetcn.com/articles/3754267" target="_blank" class="news-link">标普勉强收创新高，英伟达绩后一度跌5%，黄金走高，美团ADR大跌近10%</a> <font color='red'><strong>[1]</strong></font> <font color='grey'>- 10时22分</font></div><br><div class='new-title'>🆕 [财联社热门] <a href="https://www.cls.cn/detail/2128290" target="_blank" class="news-link">【早报】英伟达最新业绩公布；工信部发文，卫星通信产业迎利好</a> <font color='red'><strong>[1]</strong></font> <font color='grey'>- 10时22分</font></div><br><div class='new-title'>🆕 [华尔街见闻] <a href="https://wallstreetcn.com/articles/3754328" target="_blank" class="news-link">英伟达营收利润超预期，本季指引不够亮眼，“缺失中国”成焦点 | 财报见闻</a> <font color='red'><strong>[2]</strong></font> <font color='grey'>- 10时22分</font></div><br><div class='new-title'>🆕 [财联社热门] <a href="https://www.cls.cn/detail/2128262" target="_blank" class="news-link">美股收盘：三大指数齐涨 标普再创收盘新高 英伟达盘后一度跌逾5%</a> <font color='red'><strong>[2]</strong></font> <font color='grey'>- 10时22分</font></div><br><div class='new-title'>🆕 [财联社热门] <a href="https://www.cls.cn/detail/2128275" target="_blank" class="news-link">英伟达Q2数据中心营收未达预期 盘后一度大跌超5%</a> <font color='red'><strong>[4]</strong></font> <font color='grey'>- 10时22分</font></div><br><div class='new-title'>🆕 [财联社热门] <a href="https://www.cls.cn/detail/2128331" target="_blank" class="news-link">8月28日投资避雷针：英伟达财报公布后 股价盘后一度跌超5%</a> [9] <font color='grey'>- 10时22分</font></div><br><div class='new-title'>🆕 [财联社热门] <a href="https://www.cls.cn/detail/2128194" target="_blank" class="news-link">美财长贝森特证实：正探索更多行业入股机会，但不考虑持有英伟达股份</a> [11] <font color='grey'>- 10时22分</font></div></td>
+            </tr>
+        
+            <tr>
+                <td>3</td>
+                <td class="word"># 明星与身份 明星 男星 女星 偶像 网红 艺人 歌手 演员 男团 女团</td>
+                <td class="count">6</td>
+                <td class="percentage">2.35%</td>
+                <td class="titles"><div class='new-title'>🆕 [百度热搜] <a href="https://www.baidu.com/s?wd=%E6%BC%94%E5%91%98%E6%AE%B5%E4%BC%9F%E4%BC%A6%E5%8E%BB%E4%B8%96+%E6%9B%BE%E5%87%BA%E6%BC%94%E8%AD%A6%E5%AF%9F%E6%95%85%E4%BA%8B%E7%B3%BB%E5%88%97" target="_blank" class="news-link">演员段伟伦去世 曾出演警察故事系列</a> <font color='red'><strong>[4]</strong></font> <font color='grey'>- 10时22分</font></div><br><div class='new-title'>🆕 [微博] <a href="https://m.weibo.cn/search?containerid=100103type%3D1%26t%3D10%26q%3D%23%E9%A6%99%E6%B8%AF%E6%BC%94%E5%91%98%E6%AE%B5%E4%BC%9F%E4%BC%A6%E5%8E%BB%E4%B8%96%23&amp;stream_entry_id=31&amp;isnewpage=1&amp;extparam=seat%3D1%26cate%3D5001%26band_rank%3D9%26stream_entry_id%3D31%26realpos%3D9%26flag%3D0%26pos%3D9%26lcate%3D5001%26filter_type%3Drealtimehot%26q%3D%2523%25E9%25A6%2599%25E6%25B8%25AF%25E6%25BC%2594%25E5%2591%2598%25E6%25AE%25B5%25E4%25BC%259F%25E4%25BC%25A6%25E5%258E%25BB%25E4%25B8%2596%2523%26dgr%3D0%26c_type%3D31%26display_time%3D1756347593%26pre_seqid%3D17563475934380569128122" target="_blank" class="news-link">香港演员段伟伦去世</a> [9] <font color='grey'>- 10时22分</font></div><br><div class='new-title'>🆕 [百度热搜] <a href="https://www.baidu.com/s?wd=%E5%AA%92%E4%BD%93%E8%AF%84%E6%AC%A2%E4%B9%90%E8%B0%B7%E5%A5%B3%E5%9B%A2%E8%A1%A8%E6%BC%94%E8%A2%AB%E6%8C%87%E6%93%A6%E8%BE%B9" target="_blank" class="news-link">媒体评欢乐谷女团表演被指擦边</a> [17] <font color='grey'>- 10时22分</font></div><br><div class='new-title'>🆕 [抖音] <a href="https://www.douyin.com/hot/2217526" target="_blank" class="news-link">好极了明星团七夕组局玩浪漫</a> [19] <font color='grey'>- 10时22分</font></div><br><div class='new-title'>🆕 [今日头条] <a href="https://www.toutiao.com/trending/7543238260060192804/" target="_blank" class="news-link">曝演员段伟伦因病去世</a> [24] <font color='grey'>- 10时22分</font></div><br><div class='new-title'>🆕 [微博] <a href="https://m.weibo.cn/search?containerid=100103type%3D1%26t%3D10%26q%3D%2300%E5%90%8E%E7%9F%AD%E5%89%A7%E5%A5%B3%E6%BC%94%E5%91%98%E7%A1%AE%E8%AF%8A%E8%83%83%E7%99%8C%23&amp;stream_entry_id=31&amp;isnewpage=1&amp;extparam=seat%3D1%26cate%3D5001%26band_rank%3D29%26stream_entry_id%3D31%26realpos%3D29%26flag%3D0%26pos%3D29%26lcate%3D5001%26filter_type%3Drealtimehot%26q%3D%252300%25E5%2590%258E%25E7%259F%25AD%25E5%2589%25A7%25E5%25A5%25B3%25E6%25BC%2594%25E5%2591%2598%25E7%25A1%25AE%25E8%25AF%258A%25E8%2583%2583%25E7%2599%258C%2523%26dgr%3D0%26c_type%3D31%26display_time%3D1756347593%26pre_seqid%3D17563475934380569128122" target="_blank" class="news-link">00后短剧女演员确诊胃癌</a> [29] <font color='grey'>- 10时22分</font></div></td>
+            </tr>
+        
+            <tr>
+                <td>4</td>
+                <td class="word"># 八卦与爆料 八卦 花边新闻 爆料 狗仔 曝光 塌房 丑闻 翻车 潜规则</td>
+                <td class="count">3</td>
+                <td class="percentage">1.18%</td>
+                <td class="titles"><div class='new-title'>🆕 [贴吧] <a href="https://tieba.baidu.com/hottopic/browse/hottopic?topic_id=28344532&amp;amp;topic_name=%E5%8F%B2%E4%B8%8A%E6%9C%80%E4%B8%91%3FT1%E5%86%A0%E5%86%9B%E7%9A%AE%E8%82%A4%E7%BF%BB%E8%BD%A6" target="_blank" class="news-link">史上最丑?T1冠军皮肤翻车</a> [13] <font color='grey'>- 10时22分</font></div><br><div class='new-title'>🆕 [bilibili 热搜] <a href="https://search.bilibili.com/all?keyword=%E9%9C%89%E9%9C%89%E8%AE%A2%E5%A9%9A%E7%BB%86%E8%8A%82%E6%9B%9D%E5%85%89" target="_blank" class="news-link">霉霉订婚细节曝光</a> [21] <font color='grey'>- 10时22分</font></div><br><div class='new-title'>🆕 [bilibili 热搜] <a href="https://search.bilibili.com/all?keyword=%E5%85%AC%E5%AD%99%E7%A6%BB%E6%B6%82%E5%B1%B1%E5%AE%B9%E5%AE%B9%E7%9A%AE%E8%82%A4%E7%88%86%E6%96%99" target="_blank" class="news-link">公孙离涂山容容皮肤爆料</a> [24] <font color='grey'>- 10时22分</font></div></td>
+            </tr>
+        
+            <tr>
+                <td>5</td>
+                <td class="word">京东 刘强东</td>
+                <td class="count">2</td>
+                <td class="percentage">0.78%</td>
+                <td class="titles"><div class='new-title'>🆕 [知乎] <a href="https://www.zhihu.com/question/1943402325671641246" target="_blank" class="news-link">万达和京东成立注册资本超 80 亿元的合资公司，如何看待京东这种「逆势押注」的逻辑？</a> [7] <font color='grey'>- 10时22分</font></div><br><div class='new-title'>🆕 [微博] <a href="https://m.weibo.cn/search?containerid=100103type%3D1%26t%3D10%26q%3D%23%E5%8D%97%E7%BE%8E%E5%8E%84%E7%93%9C%E5%A4%9A%E5%B0%94%E7%8E%AB%E7%91%B0%E8%A2%AB%E4%BA%AC%E4%B8%9C%E5%8C%85%E4%BA%86%23&amp;stream_entry_id=31&amp;isnewpage=1&amp;extparam=seat%3D1%26cate%3D5001%26band_rank%3D20%26stream_entry_id%3D31%26realpos%3D20%26flag%3D1%26pos%3D20%26lcate%3D5001%26filter_type%3Drealtimehot%26q%3D%2523%25E5%258D%2597%25E7%25BE%258E%25E5%258E%2584%25E7%2593%259C%25E5%25A4%259A%25E5%25B0%2594%25E7%258E%25AB%25E7%2591%25B0%25E8%25A2%25AB%25E4%25BA%25AC%25E4%25B8%259C%25E5%258C%2585%25E4%25BA%2586%2523%26dgr%3D0%26c_type%3D31%26display_time%3D1756347593%26pre_seqid%3D17563475934380569128122" target="_blank" class="news-link">南美厄瓜多尔玫瑰被京东包了</a> [20] <font color='grey'>- 10时22分</font></div></td>
+            </tr>
+        
+            <tr>
+                <td>6</td>
+                <td class="word">DeepSeek 梁文锋</td>
+                <td class="count">1</td>
+                <td class="percentage">0.39%</td>
+                <td class="titles"><div class='new-title'>🆕 [华尔街见闻] <a href="https://wallstreetcn.com/articles/3754290" target="_blank" class="news-link">DeepSeek刚提到FP8，英伟达就把FP4精度推向预训练，更快、更便宜</a> [10] <font color='grey'>- 10时22分</font></div></td>
+            </tr>
+        
+            <tr>
+                <td>7</td>
+                <td class="word">比亚迪 王传福</td>
+                <td class="count">1</td>
+                <td class="percentage">0.39%</td>
+                <td class="titles"><div class='new-title'>🆕 [财联社热门] <a href="https://www.cls.cn/detail/2128292" target="_blank" class="news-link">【数读IPO】比亚迪、理想“小伙伴”今日上市</a> [13] <font color='grey'>- 10时22分</font></div></td>
+            </tr>
+        
+            <tr>
+                <td>8</td>
+                <td class="word">小米 雷军 xiaomi</td>
+                <td class="count">1</td>
+                <td class="percentage">0.39%</td>
+                <td class="titles"><div class='new-title'>🆕 [知乎] <a href="https://www.zhihu.com/question/1943816625477362454" target="_blank" class="news-link">如何看待准车主爆料小米一车两卖的行为？具体情况如何？如果是真的，这种行为违法吗？</a> <font color='red'><strong>[3]</strong></font> <font color='grey'>- 10时22分</font></div></td>
+            </tr>
+        
+            <tr>
+                <td>9</td>
+                <td class="word">马斯克 特斯拉</td>
+                <td class="count">1</td>
+                <td class="percentage">0.39%</td>
+                <td class="titles"><div class='new-title'>🆕 [知乎] <a href="https://www.zhihu.com/question/1943693453545435928" target="_blank" class="news-link">马斯克认为激光雷达会增加辅助驾驶的风险，纯视觉系统才是王道，真的是这样吗？两者各有何优劣？</a> [18] <font color='grey'>- 10时22分</font></div></td>
+            </tr>
+        
+            <tr>
+                <td>10</td>
+                <td class="word"># 感情与关系 恋情 绯闻 分手 离婚 复合 暧昧 约会 疑似恋情 同框 互动 私生活</td>
+                <td class="count">1</td>
+                <td class="percentage">0.39%</td>
+                <td class="titles"><div class='new-title'>🆕 [澎湃新闻] <a href="https://m.thepaper.cn/newsDetail_forward_31487755" target="_blank" class="news-link">佛山26岁女子欲离婚遭丈夫残忍杀害案续：一审判死缓，检方详解为何不抗诉</a> [17] <font color='grey'>- 10时22分</font></div></td>
+            </tr>
+        
+        </table>
+    
+    </body>
+    </html>
+    
